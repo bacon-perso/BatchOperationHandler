@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <!-- Test naming (Method_Scenario_Expected) and inline expected arrays are idiomatic in tests -->
+    <NoWarn>$(NoWarn);CA1707;CA1861;CA1515;CA1822;CA1305;CA1310;CA2012;CA2016</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.10.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.0" />
+    <PackageReference Include="NUnit" Version="4.3.2" />
+    <PackageReference Include="NUnit.Analyzers" Version="4.7.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Bacon.BatchOperationHandler\Bacon.BatchOperationHandler.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="NUnit.Framework" />
+  </ItemGroup>
+
+</Project>

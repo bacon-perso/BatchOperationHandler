@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+  </Folder>
+  <Project Path="Bacon.BatchOperationHandler.Samples/Bacon.BatchOperationHandler.Samples.csproj" Id="afdfa72d-6e4d-4d0b-8f2b-02523047dd30" />
+  <Project Path="Bacon.BatchOperationHandler.Tests/Bacon.BatchOperationHandler.Tests.csproj" Id="5e240d2b-ff2f-436b-bc5e-907f700f8e96" />
+  <Project Path="Bacon.BatchOperationHandler/Bacon.BatchOperationHandler.csproj" />
+</Solution>

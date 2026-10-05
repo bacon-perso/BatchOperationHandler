@@ -1,0 +1,6 @@
+@Bacon.BatchOperationHandler.Samples_HostAddress = http://localhost:5223
+
+GET {{Bacon.BatchOperationHandler.Samples_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
