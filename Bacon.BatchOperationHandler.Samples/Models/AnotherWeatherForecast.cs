@@ -1,4 +1,4 @@
-namespace Bacon.BatchOperationHandler.Samples;
+namespace Bacon.BatchOperationHandler.Samples.Models;
 
 public class AnotherWeatherForecast
 {

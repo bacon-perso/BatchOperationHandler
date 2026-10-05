@@ -1,4 +1,5 @@
 ﻿using Bacon.BatchOperationHandler.Interfaces.Services;
+using Bacon.BatchOperationHandler.Samples.Models;
 
 namespace Bacon.BatchOperationHandler.Samples.Services;
 

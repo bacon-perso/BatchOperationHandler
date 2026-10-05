@@ -32,7 +32,7 @@ public class BatchController(IBatchOperationProcessorService<WeatherForecast> we
             }
 
             await weatherForecastbatchOperationProcessorService.EnqueueAsync(weatherForecasts, cancellationToken);
-        });
+        }, cancellationToken);
     }
 
     [HttpPost]
@@ -51,11 +51,11 @@ public class BatchController(IBatchOperationProcessorService<WeatherForecast> we
                     Summary = Summaries[Random.Shared.Next(Summaries.Length)]
                 };
 
-                Console.WriteLine($"Enqueued item at {DateTime.Now.ToString("o")}");
+                Console.WriteLine($"Enqueued item at {DateTime.Now:o}");
                 await anotherWeatherForecastbatchOperationProcessorService.EnqueueAsync(anotherWeatherForecast, cancellationToken);
 
                 await Task.Delay(1500, cancellationToken);
             }
-        });
+        }, cancellationToken);
     }
 }

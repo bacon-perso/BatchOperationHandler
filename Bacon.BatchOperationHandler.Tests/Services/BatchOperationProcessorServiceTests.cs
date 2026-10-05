@@ -154,7 +154,7 @@ public class BatchOperationProcessorServiceTests
     {
         BatchOperationProcessorService<string> service = await CreateAndStartAsync();
 
-        await service.EnqueueAsync(Array.Empty<string>());
+        await service.EnqueueAsync([]);
         await AsyncTestHelper.SettleAsync();
         _time.Advance(TimeSpan.FromMinutes(10));
         await AsyncTestHelper.SettleAsync();
@@ -244,7 +244,7 @@ public class BatchOperationProcessorServiceTests
         BatchOperationProcessorService<string> service = await CreateAndStartAsync();
         await service.StopAsync(CancellationToken.None);
 
-        await service.EnqueueAsync(Array.Empty<string>());
+        await service.EnqueueAsync([]);
     }
 
     [Test]
@@ -258,9 +258,13 @@ public class BatchOperationProcessorServiceTests
         await service.EnqueueAsync("i0");
         await WaitForCallsAsync(_handler, 1);
 
-        // The queue holds exactly 2 more items; the next enqueue must wait.
-        Assert.That(service.EnqueueAsync("i1").IsCompletedSuccessfully, Is.True);
-        Assert.That(service.EnqueueAsync("i2").IsCompletedSuccessfully, Is.True);
+        using (Assert.EnterMultipleScope())
+        {
+            // The queue holds exactly 2 more items; the next enqueue must wait.
+            Assert.That(service.EnqueueAsync("i1").IsCompletedSuccessfully, Is.True);
+            Assert.That(service.EnqueueAsync("i2").IsCompletedSuccessfully, Is.True);
+        }
+
         Task throttled = service.EnqueueAsync("i3").AsTask();
 
         await AsyncTestHelper.SettleAsync();
@@ -296,7 +300,7 @@ public class BatchOperationProcessorServiceTests
         await service.EnqueueAsync(["a", "b", "c"]);
 
         await WaitForCallsAsync(_handler, 3);
-        Assert.That(_handler.Batches, Is.EqualTo(new[] { new[] { "a" }, new[] { "b" }, new[] { "c" } }));
+        Assert.That(_handler.Batches, Is.EqualTo(new[] { ["a"], ["b"], new[] { "c" } }));
     }
 
     [Test]
@@ -308,7 +312,7 @@ public class BatchOperationProcessorServiceTests
 
         await WaitForCallsAsync(_handler, 2);
         await AsyncTestHelper.SettleAsync();
-        Assert.That(_handler.Batches, Is.EqualTo(new[] { new[] { "1", "2", "3" }, new[] { "4", "5", "6" } }));
+        Assert.That(_handler.Batches, Is.EqualTo(new[] { ["1", "2", "3"], new[] { "4", "5", "6" } }));
 
         _time.Advance(_interval);
 
@@ -328,7 +332,7 @@ public class BatchOperationProcessorServiceTests
         {
             Assert.That(_handler.Batches.Max(b => b.Length), Is.LessThanOrEqualTo(7));
             Assert.That(_handler.AllItems, Has.Count.EqualTo(100));
-            Assert.That(_handler.Batches.Count, Is.EqualTo(15)); // 14 full + 1 remainder
+            Assert.That(_handler.Batches, Has.Count.EqualTo(15)); // 14 full + 1 remainder
         });
     }
 
@@ -361,7 +365,7 @@ public class BatchOperationProcessorServiceTests
         _time.Advance(TimeSpan.FromMilliseconds(100));
 
         await WaitForCallsAsync(_handler, 2);
-        Assert.That(_handler.Batches, Is.EqualTo(new[] { new[] { "a" }, new[] { "b" } }));
+        Assert.That(_handler.Batches, Is.EqualTo(new[] { ["a"], new[] { "b" } }));
     }
 
     #endregion Batching - size
@@ -507,7 +511,7 @@ public class BatchOperationProcessorServiceTests
         _time.Advance(_interval);
 
         await WaitForCallsAsync(_handler, 2);
-        Assert.That(_handler.Batches, Is.EqualTo(new[] { new[] { "a", "b" }, new[] { "c" } }));
+        Assert.That(_handler.Batches, Is.EqualTo(new[] { ["a", "b"], new[] { "c" } }));
     }
 
     #endregion Batching - timer
@@ -665,7 +669,7 @@ public class BatchOperationProcessorServiceTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(_handler.Batches, Is.EqualTo(new[] { new[] { "a" }, new[] { "b" } }));
+            Assert.That(_handler.Batches, Is.EqualTo(new[] { ["a"], new[] { "b" } }));
             Assert.That(_logger.Entries.Count(e => e.Level == LogLevel.Error), Is.EqualTo(2));
             Assert.That(_logger.Entries.Any(e => ReferenceEquals(e.Exception, errorHandlerFailure) && e.Message == "Batch Operation Handler - Failed to process the failed batch items."), Is.True);
         });
@@ -691,7 +695,7 @@ public class BatchOperationProcessorServiceTests
         await service.EnqueueAsync("b");
         await AsyncTestHelper.AdvanceUntilAsync(_time, () => _handler.ProcessCallCount >= 2, "second batch processed", TimeSpan.FromMilliseconds(250), TimeSpan.FromSeconds(10));
 
-        Assert.That(_handler.Batches, Is.EqualTo(new[] { new[] { "a" }, new[] { "b" } }));
+        Assert.That(_handler.Batches, Is.EqualTo(new[] { ["a"], new[] { "b" } }));
     }
 
     [Test]
@@ -849,8 +853,11 @@ public class BatchOperationProcessorServiceTests
         await service.EnqueueAsync(["a", "b", "c", "d", "e"]);
         await service.StopAsync(CancellationToken.None).WithTimeout();
 
-        Assert.That(_handler.AllItems, Is.EqualTo(new[] { "a", "b", "c", "d", "e" }));
-        Assert.That(_handler.Batches.All(b => b.Length <= 2), Is.True);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(_handler.AllItems, Is.EqualTo(new[] { "a", "b", "c", "d", "e" }));
+            Assert.That(_handler.Batches.All(b => b.Length <= 2), Is.True);
+        }
     }
 
     [Test]
@@ -945,8 +952,11 @@ public class BatchOperationProcessorServiceTests
         using CancellationTokenSource grace = new();
         Task stop = service.StopAsync(grace.Token);
         await AsyncTestHelper.SettleAsync();
-        Assert.That(stop.IsCompleted, Is.False);
-        Assert.That(_handler.Tokens[0].IsCancellationRequested, Is.False);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(stop.IsCompleted, Is.False);
+            Assert.That(_handler.Tokens[0].IsCancellationRequested, Is.False);
+        }
 
         await grace.CancelAsync();
 
@@ -964,7 +974,7 @@ public class BatchOperationProcessorServiceTests
         await service.StartAsync(CancellationToken.None);
         await service.StopAsync(CancellationToken.None).WithTimeout();
 
-        Assert.That(_handler.Batches, Is.EqualTo(new[] { new[] { "a", "b" }, new[] { "c" } }));
+        Assert.That(_handler.Batches, Is.EqualTo(new[] { ["a", "b"], new[] { "c" } }));
     }
 
     [Test]
@@ -1118,7 +1128,7 @@ public class BatchOperationProcessorServiceTests
         await service.EnqueueAsync([1, 2, 3, 4]);
         await service.StopAsync(CancellationToken.None);
 
-        Assert.That(intHandler.Batches, Is.EqualTo(new[] { new[] { 1, 2, 3 }, new[] { 4 } }));
+        Assert.That(intHandler.Batches, Is.EqualTo(new[] { [1, 2, 3], new[] { 4 } }));
     }
 
     #endregion Lifecycle
